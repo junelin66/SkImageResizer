@@ -46,7 +46,13 @@ namespace SkImageResizer
             }
         }
 
-        public async Task ResizeImagesAsync(string sourcePath, string destPath, double scale)
+        // without CancellationToken
+        public Task ResizeImagesAsync(string sourcePath, string destPath, double scale)
+        {
+            return ResizeImagesAsync(sourcePath, destPath, scale, CancellationToken.None);
+        }
+
+        public async Task ResizeImagesAsync(string sourcePath, string destPath, double scale, CancellationToken token)
         {
             if (!Directory.Exists(destPath))
             {
@@ -56,7 +62,7 @@ namespace SkImageResizer
             await Task.Yield();
 
             var allFiles = FindImages(sourcePath);
-
+            int count = 0;
             List<Task> tasks = new List<Task>();
             foreach (var filePath in allFiles)
             {
@@ -74,17 +80,23 @@ namespace SkImageResizer
                     var destinationWidth = (int)(sourceWidth * scale);
                     var destinationHeight = (int)(sourceHeight * scale);
 
-                    using var scaledBitmap = bitmap.Resize(
-                        new SKImageInfo(destinationWidth, destinationHeight),
-                        SKFilterQuality.High);
-                    using var scaledImage = SKImage.FromBitmap(scaledBitmap);
-                    using var data = scaledImage.Encode(SKEncodedImageFormat.Jpeg, 100);
-                    using var s = File.OpenWrite(Path.Combine(destPath, imgName + ".jpg"));
-                    data.SaveTo(s);
+                    if (!token.IsCancellationRequested)
+                    {
+                        using var scaledBitmap = bitmap.Resize(
+                           new SKImageInfo(destinationWidth, destinationHeight),
+                           SKFilterQuality.High);
+                        using var scaledImage = SKImage.FromBitmap(scaledBitmap);
+                        using var data = scaledImage.Encode(SKEncodedImageFormat.Jpeg, 100);
+                        using var s = File.OpenWrite(Path.Combine(destPath, imgName + ".jpg"));
+                        data.SaveTo(s);
+                        count++;
+                    }
                 }));
             }
 
             Task.WaitAll(tasks.ToArray());
+
+            Console.WriteLine(string.Format("完成張數: {0}", count));
         }
 
         /// <summary>
