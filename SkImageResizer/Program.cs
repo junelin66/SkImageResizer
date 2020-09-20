@@ -26,7 +26,7 @@ namespace SkImageResizer
             imageProcess.Clean(destinationPath1);
 
             sw.Start();
-            imageProcess.ResizeImages(sourcePath, destinationPath1, 2.0);
+            //imageProcess.ResizeImages(sourcePath, destinationPath1, 2.0);
             sw.Stop();
 
             decimal result1 = sw.ElapsedMilliseconds;
@@ -40,7 +40,7 @@ namespace SkImageResizer
 
             try
             {
-                Console.WriteLine($"開始非同步執行:");
+                Console.WriteLine($"開始非同步執行");
                 await imageProcess.ResizeImagesAsync(sourcePath, destinationPath2, 2.0, cts.Token);
             }
             catch (OperationCanceledException ex)
@@ -60,8 +60,12 @@ namespace SkImageResizer
             // Result
             // 效能提升比例公式：((Orig - New) / Orig) * 100%
 
-            var result = ((result1 - result2) / result1) * 100;
-            Console.WriteLine($"效能提升 {result:f2}%");
+            if (result1 != 0)
+            {
+                var result = ((result1 - result2) / result1) * 100;
+                Console.WriteLine($"效能提升 {result:f2}%");
+            }
+            Console.ReadKey();
         }
 
         private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)

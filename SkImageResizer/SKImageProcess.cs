@@ -64,6 +64,7 @@ namespace SkImageResizer
             var allFiles = FindImages(sourcePath);
             int count = 0;
             List<Task> tasks = new List<Task>();
+
             foreach (var filePath in allFiles)
             {
                 await Task.Yield();
@@ -91,12 +92,53 @@ namespace SkImageResizer
                         data.SaveTo(s);
                         count++;
                     }
-                }));
+                }, token));
             }
 
-            Task.WaitAll(tasks.ToArray());
+            try
+            {
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (OperationCanceledException)
+            {
+                //Console.WriteLine($"{Environment.NewLine}已經取消");
+            }
+            catch (Exception ex)
+            {
+                //Console.WriteLine($"{Environment.NewLine}發現例外異常 {ex.Message}");
 
-            Console.WriteLine(string.Format("完成張數: {0}", count));
+                foreach (var task in tasks)
+                {
+                    switch (task.Status)
+                    {
+                        case TaskStatus.Created:
+                            break;
+                        case TaskStatus.WaitingForActivation:
+                            break;
+                        case TaskStatus.WaitingToRun:
+                            break;
+                        case TaskStatus.Running:
+                            break;
+                        case TaskStatus.WaitingForChildrenToComplete:
+                            break;
+                        case TaskStatus.RanToCompletion:
+                            Console.WriteLine(string.Format("Task ID: {0} Completion", task.Id));
+                            break;
+                        case TaskStatus.Canceled:
+                            Console.WriteLine(string.Format("Task ID: {0} Canceled", task.Id));
+                            break;
+                        case TaskStatus.Faulted:
+                            Console.WriteLine(string.Format("Task ID: {0} Faulted", task.Id));
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+            }
+
+            //Console.WriteLine(string.Format("完成張數: {0}", count));
+
         }
 
         /// <summary>
