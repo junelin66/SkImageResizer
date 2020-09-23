@@ -55,6 +55,7 @@ namespace SkImageResizer
             sw.Stop();
 
             decimal result2 = sw.ElapsedMilliseconds;
+            Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine($"非同步的花費時間: {result2} ms");
 
             // Result

@@ -62,14 +62,14 @@ namespace SkImageResizer
             await Task.Yield();
 
             var allFiles = FindImages(sourcePath);
-            int count = 0;
             List<Task> tasks = new List<Task>();
-
             foreach (var filePath in allFiles)
             {
                 await Task.Yield();
                 tasks.Add(Task.Run(() =>
                 {
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine(string.Format("Thread ID: {0}", System.Threading.Thread.CurrentThread.ManagedThreadId));
                     var bitmap = SKBitmap.Decode(filePath);
 
                     var imgPhoto = SKImage.FromBitmap(bitmap);
@@ -90,7 +90,8 @@ namespace SkImageResizer
                         using var data = scaledImage.Encode(SKEncodedImageFormat.Jpeg, 100);
                         using var s = File.OpenWrite(Path.Combine(destPath, imgName + ".jpg"));
                         data.SaveTo(s);
-                        count++;
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine(string.Format("Finish Thread ID: {0}", System.Threading.Thread.CurrentThread.ManagedThreadId));
                     }
                 }, token));
             }
@@ -134,11 +135,7 @@ namespace SkImageResizer
                             break;
                     }
                 }
-
             }
-
-            //Console.WriteLine(string.Format("完成張數: {0}", count));
-
         }
 
         /// <summary>
